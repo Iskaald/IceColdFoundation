@@ -1,0 +1,10 @@
+{
+  "name": "com.iskaald.foundation",
+  "version": "1.0.0",
+  "displayName": "Foundation",
+  "description": "Base systems and utilities for Unity projects.",
+  "unity": "2021.3",
+  "author": {
+    "name": "Iskald"
+  }
+}
