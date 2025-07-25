@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-//using IceColdCore.Facade;
 using IceColdCore.Interface;
 using UnityEngine;
 
@@ -33,7 +32,11 @@ namespace IceColdCore
                 }
             }
             
-            //CoreLogger.LogError($"Service {requestedType.Name} not found");
+#if ICECOLD_DEBUG
+            CoreLogger.LogError($"Service {requestedType.Name} not found");
+#else
+            Debug.LogError($"Service {requestedType.Name} not found");
+#endif
             return null;
         }
 
@@ -42,10 +45,8 @@ namespace IceColdCore
         {
             Application.quitting += DeinitializeAllServices;
             Application.wantsToQuit += ApplicationOnWillQuit;
-            
-            var serviceTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(type => typeof(ICoreService).IsAssignableFrom(type) && !type.IsAbstract);;
+
+            var serviceTypes = GetAllCoreServiceTypes();
             
             var sortedServiceTypes = serviceTypes.OrderBy(type =>
             {
@@ -57,7 +58,11 @@ namespace IceColdCore
             {
                 if (!serviceInstances.ContainsKey(type))
                 {
-                    //CoreLogger.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#if ICECOLD_DEBUG
+                    CoreLogger.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#else
+                    Debug.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#endif
                     var instance = (ICoreService)Activator.CreateInstance(type);
                     serviceInstances[type] = instance;
                     instance.Initialize();
@@ -92,12 +97,33 @@ namespace IceColdCore
             
             foreach (var service in sortedServices)
             {
-                //CoreLogger.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#if ICECOLD_DEBUG
+                CoreLogger.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#else
+                Debug.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+#endif
                 service.Deinitialize();
             }
             
             serviceInstances.Clear();
             Deinitialized?.Invoke();
+        }
+
+        private static IEnumerable<Type> GetAllCoreServiceTypes()
+        {
+            return AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly =>
+                {
+                    try
+                    {
+                        return assembly.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException e)
+                    {
+                        return e.Types.Where(t => t != null);
+                    }
+                })
+                .Where(type => typeof(ICoreService).IsAssignableFrom(type) && !type.IsAbstract);
         }
     }
 }

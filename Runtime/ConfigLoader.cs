@@ -13,16 +13,17 @@ namespace IceColdCore
             {
 #if !UNITY_EDITOR
                 CoreLogger.Log($"Failed to create config {key}");
+                return null;
 #endif
                 config = CreateConfig<T>(key);
             }
 
             return config;
         }
-      
-#if UNITY_EDITOR
+        
         private static T CreateConfig<T>(string key) where T : CoreConfig
         {
+#if UNITY_EDITOR
             var config = ScriptableObject.CreateInstance<T>();
 
             const string parent = "Assets/Core/Settings";
@@ -46,13 +47,9 @@ namespace IceColdCore
             AssetDatabase.Refresh();
             
             return config;
-        }
 #else
-        private static T CreateConfig<T>(string key) where T : CoreConfig
-        {
-            var config = ScriptableObject.CreateInstance<T>();
-            return config;
-        }
+            return null;
 #endif
+        }
     }
 }

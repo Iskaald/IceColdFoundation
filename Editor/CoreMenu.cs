@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace IceColdCore.Editor
 {
-    public partial class CoreMenu
+    public class CoreMenu
     {
-        private static T FindConfigAsset<T>() where T : CoreConfig
+        protected static T FindConfigAsset<T>() where T : CoreConfig
         {
             var guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
 
@@ -26,25 +26,29 @@ namespace IceColdCore.Editor
             var config = ScriptableObject.CreateInstance<T>();
 
             const string parent = "Assets/Core/Settings";
-            var folderPath = $"{parent}/Resources";
-            
+            const string subfolder = "Resources";
+            var folderPath = $"{parent}/{subfolder}";
+
+            if (!AssetDatabase.IsValidFolder(parent))
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/Core"))
+                {
+                    AssetDatabase.CreateFolder("Assets", "Core");
+                }
+                AssetDatabase.CreateFolder("Assets/Core", "Settings");
+            }
+
             if (!AssetDatabase.IsValidFolder(folderPath))
             {
-                if (!AssetDatabase.IsValidFolder(parent))
-                {
-                    AssetDatabase.CreateFolder("Assets/Core", "Settings");
-                }
-                if (!AssetDatabase.IsValidFolder(folderPath))
-                    AssetDatabase.CreateFolder("Assets/Core/Settings", "Resources");
-                
-                AssetDatabase.Refresh();
+                AssetDatabase.CreateFolder(parent, subfolder);
             }
-            
+
             var assetPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/{key}.asset");
-            AssetDatabase.CreateAsset(config,assetPath);
+
+            AssetDatabase.CreateAsset(config, assetPath);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            
+
             return config;
         }
     }
