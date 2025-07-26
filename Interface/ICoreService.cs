@@ -1,4 +1,4 @@
-namespace IceColdCore.Interface
+namespace IceCold.Interface
 {
     public interface ICoreService
     {

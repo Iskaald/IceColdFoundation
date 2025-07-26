@@ -1,7 +1,7 @@
 ﻿{
-  "name": "IceColdCore.Editor",
+  "name": "IceCold.Editor",
   "references": [
-    "IceColdCore.Interface"
+    "IceCold.Interface"
   ],
   "includePlatforms": [
     "Editor"

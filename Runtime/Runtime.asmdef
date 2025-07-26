@@ -1,6 +1,7 @@
 ﻿{
-  "name": "IceColdCore",
+  "name": "IceCold",
   "references": [
-    "IceColdCore.Interface"
+    "IceCold.Interface",
+    "IceCold.Logger"
   ]
 }

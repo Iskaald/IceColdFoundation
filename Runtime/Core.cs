@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using IceColdCore.Interface;
+using IceCold.Interface;
 using UnityEngine;
 
-namespace IceColdCore
+namespace IceCold
 {
     public static class Core
     {
@@ -32,11 +32,7 @@ namespace IceColdCore
                 }
             }
             
-#if ICECOLD_DEBUG
-            CoreLogger.LogError($"Service {requestedType.Name} not found");
-#else
-            Debug.LogError($"Service {requestedType.Name} not found");
-#endif
+            IceColdLogger.LogError($"Service {requestedType.Name} not found");
             return null;
         }
 
@@ -58,11 +54,8 @@ namespace IceColdCore
             {
                 if (!serviceInstances.ContainsKey(type))
                 {
-#if ICECOLD_DEBUG
-                    CoreLogger.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
-#else
-                    Debug.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
-#endif
+                    IceColdLogger.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+
                     var instance = (ICoreService)Activator.CreateInstance(type);
                     serviceInstances[type] = instance;
                     instance.Initialize();
@@ -97,11 +90,8 @@ namespace IceColdCore
             
             foreach (var service in sortedServices)
             {
-#if ICECOLD_DEBUG
-                CoreLogger.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
-#else
-                Debug.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
-#endif
+                IceColdLogger.Log($"Deinitializing Service: {service.GetType().Name} (Priority: {service.GetType().GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
+
                 service.Deinitialize();
             }
             

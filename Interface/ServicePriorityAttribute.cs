@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IceColdCore.Interface
+namespace IceCold.Interface
 {
     /// <summary>
     /// Defines the initialization and deinitialization priority for a core service.

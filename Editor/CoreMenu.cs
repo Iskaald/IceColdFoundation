@@ -1,8 +1,8 @@
-﻿using IceColdCore.Interface;
+﻿using IceCold.Interface;
 using UnityEditor;
 using UnityEngine;
 
-namespace IceColdCore.Editor
+namespace IceCold.Editor
 {
     public class CoreMenu
     {
