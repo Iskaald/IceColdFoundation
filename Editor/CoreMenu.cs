@@ -25,17 +25,17 @@ namespace IceCold.Editor
         {
             var config = ScriptableObject.CreateInstance<T>();
 
-            const string parent = "Assets/Core/Settings";
+            const string parent = "Assets/IceCold/Settings";
             const string subfolder = "Resources";
             var folderPath = $"{parent}/{subfolder}";
 
             if (!AssetDatabase.IsValidFolder(parent))
             {
-                if (!AssetDatabase.IsValidFolder("Assets/Core"))
+                if (!AssetDatabase.IsValidFolder("Assets/IceCold"))
                 {
-                    AssetDatabase.CreateFolder("Assets", "Core");
+                    AssetDatabase.CreateFolder("Assets", "IceCold");
                 }
-                AssetDatabase.CreateFolder("Assets/Core", "Settings");
+                AssetDatabase.CreateFolder("Assets/IceCold", "Settings");
             }
 
             if (!AssetDatabase.IsValidFolder(folderPath))
