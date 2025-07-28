@@ -1,0 +1,1 @@
+The core module providing essential base classes, interfaces, and service management for the IceColdCore framework. All other modules depend on Foundation.
