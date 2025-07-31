@@ -13,9 +13,9 @@ namespace IceCold
         public static Action Deinitialized;
         public static Action willDeinitialize;
         
-        private static readonly Dictionary<Type, ICoreService> serviceInstances = new();
+        private static readonly Dictionary<Type, IIceColdService> serviceInstances = new();
         
-        public static T GetService<T>() where T : class, ICoreService
+        public static T GetService<T>() where T : class, IIceColdService
         {
             var requestedType = typeof(T);
             
@@ -56,7 +56,7 @@ namespace IceCold
                 {
                     IceColdLogger.Log($"Initializing Service: {type.Name} (Priority: {type.GetCustomAttribute<ServicePriorityAttribute>()?.Priority ?? int.MaxValue})");
 
-                    var instance = (ICoreService)Activator.CreateInstance(type);
+                    var instance = (IIceColdService)Activator.CreateInstance(type);
                     serviceInstances[type] = instance;
                     instance.Initialize();
                 }
@@ -113,7 +113,7 @@ namespace IceCold
                         return e.Types.Where(t => t != null);
                     }
                 })
-                .Where(type => typeof(ICoreService).IsAssignableFrom(type) && !type.IsAbstract);
+                .Where(type => typeof(IIceColdService).IsAssignableFrom(type) && !type.IsAbstract);
         }
     }
 }

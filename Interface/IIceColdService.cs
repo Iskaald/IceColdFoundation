@@ -1,6 +1,6 @@
 namespace IceCold.Interface
 {
-    public interface ICoreService
+    public interface IIceColdService
     {
         public void Initialize();
         public void Deinitialize();

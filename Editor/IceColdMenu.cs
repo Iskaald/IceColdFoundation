@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace IceCold.Editor
 {
-    public class CoreMenu
+    public class IceColdMenu
     {
-        protected static T FindConfigAsset<T>() where T : CoreConfig
+        protected static T FindConfigAsset<T>() where T : IceColdConfig
         {
             var guids = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
 
@@ -21,7 +21,7 @@ namespace IceCold.Editor
             return newConfig;
         }
         
-        private static T CreateConfig<T>(string key) where T : CoreConfig
+        private static T CreateConfig<T>(string key) where T : IceColdConfig
         {
             var config = ScriptableObject.CreateInstance<T>();
 

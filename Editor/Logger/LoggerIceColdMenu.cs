@@ -3,7 +3,7 @@ using UnityEditor;
 
 namespace IceCold.Editor
 {
-    public class LoggerCoreMenu : CoreMenu
+    public class LoggerIceColdMenu : IceColdMenu
     {
         [MenuItem("IceCold/Logger/Config", priority = 0)]
         private static void SelectLoggerConfig()

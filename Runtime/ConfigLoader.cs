@@ -4,9 +4,9 @@ namespace IceCold
 {
     public static class ConfigLoader
     {
-        public static T GetConfig<T>(string key) where T : CoreConfig
+        public static T GetConfig<T>(string key) where T : IceColdConfig
         {
-            return CoreConfig.GetConfig<T>(key);
+            return IceColdConfig.GetConfig<T>(key);
         }
     }
 }

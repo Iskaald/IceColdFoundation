@@ -1,6 +1,6 @@
 ﻿namespace IceCold.Interface
 {
-    public interface ILoggerService : ICoreService
+    public interface ILoggerService : IIceColdService
     {
         public void Log(string message);
         public void LogWarning(string message);

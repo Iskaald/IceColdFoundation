@@ -5,7 +5,7 @@ using UnityEngine;
 namespace IceCold.Logger
 {
     [ServicePriority(0)]
-    public class LoggerService : ILoggerService
+    public class IceColdLoggerService : ILoggerService
     {
         private LoggerConfig config;
         public bool IsInitialized { get; private set; }
@@ -13,7 +13,7 @@ namespace IceCold.Logger
         public void Initialize()
         {
             IceColdLogger.Init(this);
-            config = CoreConfig.GetConfig<LoggerConfig>(LoggerConfig.ConfigKey);
+            config = IceColdConfig.GetConfig<LoggerConfig>(LoggerConfig.ConfigKey);
             
             IsInitialized = true;
         }

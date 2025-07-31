@@ -3,7 +3,7 @@
 namespace IceCold.Interface
 {
     [CreateAssetMenu(fileName = nameof(LoggerConfig), menuName = "IceCold/Logger/Create Config", order = 0)]
-    public class LoggerConfig : CoreConfig
+    public class LoggerConfig : IceColdConfig
     {
         public static string ConfigKey => nameof(LoggerConfig);
         public override string Key => ConfigKey;
