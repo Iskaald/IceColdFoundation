@@ -1,6 +1,6 @@
 {
   "name": "com.iskaald.foundation",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "displayName": "Ice Cold Foundation",
   "description": "Base systems and utilities for Unity projects.",
   "unity": "2021.3",
