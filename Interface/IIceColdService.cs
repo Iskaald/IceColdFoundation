@@ -6,7 +6,7 @@ namespace IceCold.Interface
         public void Deinitialize();
         
         public bool IsInitialized { get; }
-
-        public bool OnWillQuit();
+        
+        public void OnWillQuit();
     }
 }

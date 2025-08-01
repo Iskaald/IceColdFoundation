@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using IceCold.Interface;
 using UnityEngine;
 
@@ -14,6 +15,8 @@ namespace IceCold
         public static Action willDeinitialize;
         
         private static readonly Dictionary<Type, IIceColdService> serviceInstances = new();
+        
+        private static bool isAttemptingToQuit = false;
         
         public static T GetService<T>() where T : class, IIceColdService
         {
@@ -67,15 +70,52 @@ namespace IceCold
         private static bool ApplicationOnWillQuit()
         {
             Application.wantsToQuit -= ApplicationOnWillQuit;
-            willDeinitialize?.Invoke();
-            
-            var canQuit = true;
-            foreach (var service in serviceInstances.Values)
+            if (isAttemptingToQuit)
             {
-                if (canQuit) canQuit = service.OnWillQuit();
+                return false;
             }
 
-            return canQuit;
+            isAttemptingToQuit = true;
+            
+            _ = HandleQuitSequenceAsync();
+
+            return false;
+        }
+        
+        private static async Task HandleQuitSequenceAsync()
+        {
+            foreach (var service in serviceInstances.Values)
+            {
+                service.OnWillQuit();
+            }
+
+            var quitTasks = new List<Task<bool>>();
+            foreach (var service in serviceInstances.Values)
+            {
+                if (service is IQuittingService quittingService)
+                {
+                    quitTasks.Add(quittingService.CanQuitAsync());
+                }
+            }
+
+            if (quitTasks.Count == 0)
+            {
+                Application.Quit();
+                return;
+            }
+
+            var results = await Task.WhenAll(quitTasks);
+
+            if (results.All(canQuit => canQuit))
+            {
+                Application.Quit();
+            }
+            else
+            {
+                IceColdLogger.LogWarning("Application quit was aborted by a service.");
+                isAttemptingToQuit = false;
+                Application.wantsToQuit += ApplicationOnWillQuit;
+            }
         }
 
         private static void DeinitializeAllServices()

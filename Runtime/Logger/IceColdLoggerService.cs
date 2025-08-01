@@ -24,10 +24,7 @@ namespace IceCold.Logger
             IsInitialized = false;
         }
         
-        public bool OnWillQuit()
-        {
-            return true;
-        }
+        public void OnWillQuit() { }
 
         public void Log(string message)
         {
