@@ -1,7 +1,8 @@
 ﻿{
   "name": "IceCold.Editor",
   "references": [
-    "IceCold.Interface"
+    "IceCold.Interface",
+    "IceCold"
   ],
   "includePlatforms": [
     "Editor"
