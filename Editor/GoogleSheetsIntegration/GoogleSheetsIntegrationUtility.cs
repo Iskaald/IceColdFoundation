@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IceCold.Interface;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -10,23 +11,53 @@ namespace IceCold.GoogleSheetsIntegration.Editor
 {
     public class GoogleSheetsIntegrationUtility
     {
-        private GoogleSheetsConfig config = null;
+        private GoogleSheetsConfig _config = null;
+        private GoogleSheetsConfig Config
+        {
+            get
+            {
+                if (_config == null)
+                {
+                    _config = Resources.Load<GoogleSheetsConfig>(GoogleSheetsConfig.ConfigKey);
+                }
+                return _config;
+            }
+        }
         
         public string GetGoogleSheetsApiKey()
         {
-            if (config != null) return config.apiKey;
-            
-            config = Resources.Load<GoogleSheetsConfig>(GoogleSheetsConfig.ConfigKey);
-            if (config != null && !string.IsNullOrEmpty(config.apiKey))
-                return config.apiKey;
+            if (Config != null && !string.IsNullOrEmpty(Config.apiKey))
+                return Config.apiKey;
 
             return null;
         }
+
+        public void FetchTabs(string sheetUrl, Action<string, SpreadsheetResponse> callback)
+        {
+            _ = FetchTabsAsync(sheetUrl, callback);
+        }
+
+        public void DownloadAndImportCsv(IceColdConfig targetConfig, string sheetUrl, string tabName)
+        {
+            _ = DownloadAndImportCsvAsync(targetConfig, sheetUrl, tabName);
+        }
         
-        public async Task FetchTabs(string sheetUrl, Action<string,List<string>> callback)
+        public void ExportConfigToCsv(IceColdConfig targetConfig)
+        {
+            var csv = ExportToCsv(targetConfig);
+
+            var path = EditorUtility.SaveFilePanel("Save Config as CSV", "Assets", targetConfig.Key + ".csv", "csv");
+            if (string.IsNullOrEmpty(path)) return;
+            
+            File.WriteAllText(path, csv);
+            IceColdLogger.Log($"[IceCold] Successfully exported config to {path}");
+            EditorUtility.RevealInFinder(path);
+        }
+        
+        private async Task FetchTabsAsync(string sheetUrl, Action<string,SpreadsheetResponse> callback)
         {
             var fetchTabsError = string.Empty;
-            var sheetTabs = new List<string>();
+            var spreadsheetData = new SpreadsheetResponse();
 
             try
             {
@@ -52,18 +83,9 @@ namespace IceCold.GoogleSheetsIntegration.Editor
                 }
 
                 var responseJson = request.downloadHandler.text;
-                var spreadsheetData = JsonUtility.FromJson<SpreadsheetResponse>(responseJson);
+                spreadsheetData = JsonUtility.FromJson<SpreadsheetResponse>(responseJson);
                 
-                if (spreadsheetData != null && spreadsheetData.sheets != null)
-                {
-                    sheetTabs.Clear();
-                    foreach (var sheet in spreadsheetData.sheets)
-                    {
-                        sheetTabs.Add(sheet.properties.title);
-                    }
-                }
-
-                if (sheetTabs.Count == 0)
+                if (spreadsheetData == null || spreadsheetData.sheets == null || spreadsheetData.sheets.Count == 0)
                 {
                     fetchTabsError = "Could not find any sheet tabs. Is the URL correct and the sheet public ('Anyone with the link can view')?";
                 }
@@ -74,8 +96,47 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             }
             finally
             {
-                callback?.Invoke(fetchTabsError, sheetTabs);
+                callback?.Invoke(fetchTabsError, spreadsheetData);
             }
+        }
+        
+        private async Task DownloadAndImportCsvAsync(IceColdConfig targetConfig, string sheetUrl, string tabName)
+        {
+            IceColdLogger.Log($"[IceCold] Starting download for tab '{tabName}'...");
+
+            try
+            {
+                var sheetId = ExtractSheetId(sheetUrl);
+                var url = $"https://docs.google.com/spreadsheets/d/{sheetId}/gviz/tq?tqx=out:csv&sheet={UnityWebRequest.EscapeURL(tabName)}";
+                
+                using var request = UnityWebRequest.Get(url);
+                await request.SendWebRequest();
+
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    throw new Exception($"Network Error: {request.error}. Response Code: {request.responseCode}. " +
+                                        $"Is the sheet public ('Anyone with the link can view') and is the tab name '{tabName}' correct?");
+                }
+
+                var csv = request.downloadHandler.text;
+
+                Undo.RecordObject(targetConfig, "Import from Google Sheets");
+                ImportFromCsv(targetConfig, csv);
+                EditorUtility.SetDirty(targetConfig);
+                AssetDatabase.SaveAssets();
+            }
+            catch (Exception ex)
+            {
+                IceColdLogger.LogError($"[IceCold] Failed to download or import CSV: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Exports the serializable fields of a config object to a CSV string.
+        /// </summary>
+        private string ExportToCsv(IceColdConfig targetConfig)
+        {
+            return CsvUtility.ToCsv(targetConfig);
         }
         
         private string ExtractSheetId(string url)
@@ -84,6 +145,15 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             var match = Regex.Match(url, @"/d/([a-zA-Z0-9-_]+)");
             if (!match.Success) throw new ArgumentException("Invalid Google Sheet URL. Could not find sheet ID.");
             return match.Groups[1].Value;
+        }
+        
+        /// <summary>
+        /// Imports data from a CSV string, populating the target config object's fields.
+        /// </summary>
+        private void ImportFromCsv(IceColdConfig targetConfig, string csv)
+        {
+            CsvUtility.FillObjectFromCsv(targetConfig, csv);
+            IceColdLogger.Log($"Successfully imported data into {targetConfig.Key}.asset from CSV.");
         }
     }
 }
