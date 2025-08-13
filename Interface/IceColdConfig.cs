@@ -4,16 +4,6 @@ namespace IceCold.Interface
 {
     public abstract class IceColdConfig : ScriptableObject
     {
-        public abstract string Key { get; }
-        
-        [Tooltip("If checked, allows importing data from a public Google Sheet.")]
-        [CsvIgnore]
-        public bool useGoogleSheets = false;
-        [CsvIgnore]
-        public string googleSheetUrl = "";
-        [HideInInspector] [CsvIgnore]
-        public string selectedTab = "";
-
         /// <summary>
         /// Gets the config asset from Resources. If not found, creates a temporary in-memory instance.
         /// </summary>

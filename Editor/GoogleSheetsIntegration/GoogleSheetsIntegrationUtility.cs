@@ -18,7 +18,7 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             {
                 if (_config == null)
                 {
-                    _config = Resources.Load<GoogleSheetsConfig>(GoogleSheetsConfig.ConfigKey);
+                    _config = Resources.Load<GoogleSheetsConfig>(nameof(GoogleSheetsConfig));
                 }
                 return _config;
             }
@@ -37,12 +37,12 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             _ = FetchTabsAsync(sheetUrl, callback);
         }
 
-        public void DownloadAndImportCsv(IceColdConfig targetConfig, string sheetUrl, string tabName)
+        public void DownloadAndImportCsv(BaseConfigNode targetConfig, string sheetUrl, string tabName)
         {
             _ = DownloadAndImportCsvAsync(targetConfig, sheetUrl, tabName);
         }
         
-        public void ExportConfigToCsv(IceColdConfig targetConfig)
+        public void ExportConfigToCsv(BaseConfigNode targetConfig)
         {
             var csv = ExportToCsv(targetConfig);
 
@@ -100,7 +100,7 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             }
         }
         
-        private async Task DownloadAndImportCsvAsync(IceColdConfig targetConfig, string sheetUrl, string tabName)
+        private async Task DownloadAndImportCsvAsync(BaseConfigNode targetConfig, string sheetUrl, string tabName)
         {
             IceColdLogger.Log($"[IceCold] Starting download for tab '{tabName}'...");
 
@@ -120,10 +120,22 @@ namespace IceCold.GoogleSheetsIntegration.Editor
 
                 var csv = request.downloadHandler.text;
 
+                // Record the object's state before we attempt to change it.
                 Undo.RecordObject(targetConfig, "Import from Google Sheets");
-                ImportFromCsv(targetConfig, csv);
-                EditorUtility.SetDirty(targetConfig);
-                AssetDatabase.SaveAssets();
+                var wasChanged = targetConfig.ParseCsv(csv);
+                
+                if (wasChanged)
+                {
+                    IceColdLogger.Log($"Successfully imported data into {targetConfig.name}.asset. Saving asset.");
+                    EditorUtility.SetDirty(targetConfig);
+                    AssetDatabase.SaveAssets(); // Or AssetDatabase.SaveAssetIfDirty(targetConfig);
+                }
+                else
+                {
+                    IceColdLogger.LogWarning($"Import for {targetConfig.name}.asset was skipped. The data may have been invalid or resulted in no changes.");
+                    // We recorded an undo state, but nothing changed, so we clear it to avoid a "phantom" undo step.
+                    Undo.ClearUndo(targetConfig);
+                }
             }
             catch (Exception ex)
             {
@@ -134,9 +146,9 @@ namespace IceCold.GoogleSheetsIntegration.Editor
         /// <summary>
         /// Exports the serializable fields of a config object to a CSV string.
         /// </summary>
-        private string ExportToCsv(IceColdConfig targetConfig)
+        private string ExportToCsv(BaseConfigNode targetConfig)
         {
-            return CsvUtility.ToCsv(targetConfig);
+            return targetConfig.ExportToCsv();
         }
         
         private string ExtractSheetId(string url)
@@ -145,15 +157,6 @@ namespace IceCold.GoogleSheetsIntegration.Editor
             var match = Regex.Match(url, @"/d/([a-zA-Z0-9-_]+)");
             if (!match.Success) throw new ArgumentException("Invalid Google Sheet URL. Could not find sheet ID.");
             return match.Groups[1].Value;
-        }
-        
-        /// <summary>
-        /// Imports data from a CSV string, populating the target config object's fields.
-        /// </summary>
-        private void ImportFromCsv(IceColdConfig targetConfig, string csv)
-        {
-            CsvUtility.FillObjectFromCsv(targetConfig, csv);
-            IceColdLogger.Log($"Successfully imported data into {targetConfig.Key}.asset from CSV.");
         }
     }
 }

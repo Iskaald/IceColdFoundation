@@ -6,7 +6,7 @@ using IceCold.Interface;
 
 namespace IceCold.Editor
 {
-    [CustomEditor(typeof(IceColdConfig), true)]
+    [CustomEditor(typeof(BaseConfigNode), true)]
     public class IceColdConfigEditor : UnityEditor.Editor
     {
         private List<string> sheetTabs = new();
@@ -36,7 +36,7 @@ namespace IceCold.Editor
 
             if (GUILayout.Button("Export to CSV File"))
             {
-                gSheetsUtil.ExportConfigToCsv((IceColdConfig)target);
+                gSheetsUtil.ExportConfigToCsv((BaseConfigNode)target);
             }
             
             EditorGUILayout.PropertyField(useGoogleSheetsProp, new GUIContent("Import from Google Sheets"));
@@ -67,7 +67,7 @@ namespace IceCold.Editor
                     EditorGUI.BeginDisabledGroup(string.IsNullOrEmpty(selectedTabProp.stringValue));
                     if (GUILayout.Button("Download & Import from Tab"))
                     {
-                        gSheetsUtil.DownloadAndImportCsv((IceColdConfig)target, googleSheetUrlProp.stringValue, selectedTabProp.stringValue);
+                        gSheetsUtil.DownloadAndImportCsv((BaseConfigNode)target, googleSheetUrlProp.stringValue, selectedTabProp.stringValue);
                     }
                     EditorGUI.EndDisabledGroup();
                 }
@@ -101,7 +101,7 @@ namespace IceCold.Editor
 
                         if (GUILayout.Button("Download & Import from Selected Tab"))
                         {
-                            gSheetsUtil.DownloadAndImportCsv((IceColdConfig)target, googleSheetUrlProp.stringValue, selectedTabProp.stringValue);
+                            gSheetsUtil.DownloadAndImportCsv((BaseConfigNode)target, googleSheetUrlProp.stringValue, selectedTabProp.stringValue);
                         }
                     }
                 }

@@ -13,7 +13,7 @@ namespace IceCold.Logger
         public void Initialize()
         {
             IceColdLogger.Init(this);
-            config = IceColdConfig.GetConfig<LoggerConfig>(LoggerConfig.ConfigKey);
+            config = IceColdConfig.GetConfig<LoggerConfig>(nameof(LoggerConfig));
             
             IsInitialized = true;
         }
