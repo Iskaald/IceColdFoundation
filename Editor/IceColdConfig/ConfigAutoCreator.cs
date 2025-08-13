@@ -34,12 +34,12 @@ namespace IceCold.Editor
         {
             var configTypes = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => typeof(BaseConfigNode).IsAssignableFrom(type) && !type.IsAbstract);
+                .Where(type => typeof(IceColdConfig).IsAssignableFrom(type) && !type.IsAbstract);
 
             var createdCount = 0;
             foreach (var type in configTypes)
             {
-                var tempInstance = (BaseConfigNode)ScriptableObject.CreateInstance(type);
+                var tempInstance = (IceColdConfig)ScriptableObject.CreateInstance(type);
                 var key = tempInstance.Key;
                 Object.DestroyImmediate(tempInstance);
 

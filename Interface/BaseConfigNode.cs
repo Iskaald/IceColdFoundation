@@ -11,7 +11,6 @@ namespace IceCold.Interface
         [Tooltip("A unique key used to identify and load this configuration asset.")]
         [SerializeField]
         protected string configKey;
-        public abstract string Key { get; }
 
         [Header("Data Source Settings")]
         [Tooltip("If checked, allows importing data from a public Google Sheet.")]

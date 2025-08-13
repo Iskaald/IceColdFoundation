@@ -4,6 +4,7 @@ namespace IceCold.Interface
 {
     public abstract class IceColdConfig : ScriptableObject
     {
+        public abstract string Key { get; }
         /// <summary>
         /// Gets the config asset from Resources. If not found, creates a temporary in-memory instance.
         /// </summary>
