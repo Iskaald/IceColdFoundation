@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace IceCold.Interface
 {
@@ -7,8 +8,13 @@ namespace IceCold.Interface
     {
         public override string Key => nameof(LoggerConfig);
         
+        [Header("Default Fallback Settings")]
+        public LogFilterSettings editorFilterSettings = new(true, true, true);
         public LogFilterSettings debugFilterSettings = new(true, true, true);
         public LogFilterSettings releaseFilterSettings = new(false, false, true);
-        public LogFilterSettings editorFilterSettings = new(true, true, true);
+        
+        [Header("Service Group Settings")]
+        [Tooltip("Per-group settings")]
+        public List<GroupLogFilterSettings> groupSettings = new();
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using IceCold.Interface;
 using UnityEngine;
 
@@ -8,6 +11,8 @@ namespace IceCold.Logger
     public class IceColdLoggerService : ILoggerService
     {
         private LoggerConfig config;
+        
+        private List<GroupLogFilterSettings> sortedGroupSettings;
         public bool IsInitialized { get; private set; }
         
         public void Initialize()
@@ -15,91 +20,100 @@ namespace IceCold.Logger
             IceColdLogger.Init(this);
             config = IceColdConfig.GetConfig<LoggerConfig>(nameof(LoggerConfig));
             
+            if (config != null && config.groupSettings != null)
+            {
+                // We now sort by the length of the *absolute* path
+                sortedGroupSettings = config.groupSettings
+                    .OrderByDescending(g => g.AbsolutePath.Length)
+                    .ToList();
+            }
+            else
+            {
+                sortedGroupSettings = new List<GroupLogFilterSettings>();
+                Debug.LogError("IceColdLoggerService: LoggerConfig is missing or invalid!");
+            }
+            
             IsInitialized = true;
         }
 
         public void Deinitialize()
         {
             config = null;
+            sortedGroupSettings?.Clear();
             IsInitialized = false;
         }
         
         public void OnWillQuit() { }
-
-        public void Log(string message)
+        
+        public void Log(string message, [CallerFilePath] string callerPath = "")
         {
-            if (Application.isEditor)
-            {
-                if (config.editorFilterSettings.log)
-                    Debug.Log(message);
-            }
-            else if (Debug.isDebugBuild)
-            {
-                if (config.debugFilterSettings.log)
-                    Debug.Log(message);
-            }
-            else
-            {
-                if (config.releaseFilterSettings.log)
-                    Debug.Log(message);
-            }
+            var group = FindGroupForPath(callerPath);
+            if (ShouldLog(group, s => s.log))
+                Debug.Log(FormatMessage(group?.groupName, message));
         }
 
-        public void LogWarning(string message)
+        public void LogWarning(string message, string callerPath = "")
         {
-            if (Application.isEditor)
-            {
-                if (config.editorFilterSettings.warning)
-                    Debug.LogWarning(message);
-            }
-            else if (Debug.isDebugBuild)
-            {
-                if (config.debugFilterSettings.warning)
-                    Debug.LogWarning(message);
-            }
-            else
-            {
-                if (config.releaseFilterSettings.warning)
-                    Debug.LogWarning(message);
-            }
+            var group = FindGroupForPath(callerPath);
+            if (ShouldLog(group, s => s.warning))
+                Debug.LogWarning(FormatMessage(group?.groupName, message));
         }
 
-        public void LogError(string message)
+        public void LogError(string message, string callerPath)
         {
-            if (Application.isEditor)
-            {
-                if (config.editorFilterSettings.error)
-                    Debug.LogError(message);
-            }
-            else if (Debug.isDebugBuild)
-            {
-                if (config.debugFilterSettings.error)
-                    Debug.LogError(message);
-            }
-            else
-            {
-                if (config.releaseFilterSettings.error)
-                    Debug.LogError(message);
-            }
+            var group = FindGroupForPath(callerPath);
+            if (ShouldLog(group, s => s.error))
+                Debug.LogError(FormatMessage(group?.groupName, message));
         }
 
-        public void LogException(Exception exception)
+        public void LogException(Exception exception, string callerPath)
         {
-            if (Application.isEditor)
+            var group = FindGroupForPath(callerPath);
+            if (ShouldLog(group, s => s.error))
+                Debug.LogException(exception);
+        }
+
+        private GroupLogFilterSettings FindGroupForPath(string callerPath)
+        {
+            if (string.IsNullOrEmpty(callerPath) || sortedGroupSettings == null)
+                return null;
+
+            var normalizedCallerPath = callerPath.Replace('\\', '/');
+
+            foreach (var groupSetting in sortedGroupSettings)
             {
-                if (config.editorFilterSettings.error)
-                    Debug.LogException(exception);
+                if (normalizedCallerPath.StartsWith(groupSetting.AbsolutePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return groupSetting;
+                }
             }
-            else if (Debug.isDebugBuild)
+            return null;
+        }
+        
+        private bool ShouldLog(GroupLogFilterSettings group, Func<LogFilterSettings, bool> levelCheck)
+        {
+            if (!IsInitialized) return false;
+
+            LogFilterSettings settings;
+            if (group != null)
             {
-                if (config.debugFilterSettings.error)
-                    Debug.LogException(exception);
+                if (Application.isEditor) settings = group.editorSettings;
+                else if (Debug.isDebugBuild) settings = group.developmentSettings;
+                else settings = group.releaseSettings;
             }
             else
             {
-                if (config.releaseFilterSettings.error)
-                    Debug.LogException(exception);
+                if (Application.isEditor) settings = config.editorFilterSettings;
+                else if (Debug.isDebugBuild) settings = config.debugFilterSettings;
+                else settings = config.releaseFilterSettings;
             }
+
+            return levelCheck(settings);
+        }
+        
+        private string FormatMessage(string groupName, string message)
+        {
+            return $"[{groupName ?? "Default"}] {message}";
         }
     }
 }

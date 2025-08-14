@@ -1,4 +1,5 @@
-﻿using IceCold.Interface;
+﻿using System.Runtime.CompilerServices;
+using IceCold.Interface;
 
 namespace IceCold
 {
@@ -6,30 +7,29 @@ namespace IceCold
     {
         private static ILoggerService service;
 
-
         public static void Init(ILoggerService loggerService)
         {
             service = loggerService;
         }
 
-        public static void Log(string message)
+        public static void Log(string message, [CallerFilePath] string callerPath = "")
         {
-            service?.Log(message);
+            service?.Log(message, callerPath);
         }
 
-        public static void LogWarning(string message)
+        public static void LogWarning(string message, [CallerFilePath] string callerPath = "")
         {
-            service?.LogWarning(message);
+            service?.LogWarning(message, callerPath);
         }
         
-        public static void LogError(string message)
+        public static void LogError(string message, [CallerFilePath] string callerPath = "")
         {
-            service?.LogError(message);
+            service?.LogError(message, callerPath);
         }
         
-        public static void LogException(System.Exception exception)
+        public static void LogException(System.Exception exception, [CallerFilePath] string callerPath = "")
         {
-            service?.LogError(exception.ToString());
+            service?.LogException(exception, callerPath);
         }
     }
 }
